@@ -33,7 +33,11 @@ def load_dotenv() -> None:
 
 
 load_dotenv()
-DEFAULT_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
+AI_PROVIDER = os.getenv("AI_PROVIDER", "anthropic").strip().lower()
+ANTHROPIC_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
+KIMI_MODEL = os.getenv("KIMI_MODEL", "kimi-k2.5")
+KIMI_API_URL = os.getenv("KIMI_API_URL", "https://api.moonshot.ai/v1/chat/completions")
+DEFAULT_MODEL = KIMI_MODEL if AI_PROVIDER == "kimi" else ANTHROPIC_MODEL
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 USE_POSTGRES = DATABASE_URL.startswith("postgres://") or DATABASE_URL.startswith("postgresql://")
 
@@ -559,12 +563,12 @@ def parse_generation_response(raw_response: str) -> dict[str, str]:
     try:
         data = json.loads(cleaned)
     except json.JSONDecodeError as exc:
-        raise RuntimeError("Claude no devolvio el JSON esperado con entrenamiento y briefing.") from exc
+        raise RuntimeError("La IA no devolvio el JSON esperado con entrenamiento y briefing.") from exc
 
     adapted_workout = normalize_adapted_workout(str(data.get("adapted_workout", "")).strip())
     briefing = normalize_briefing(str(data.get("briefing", "")).strip())
     if not adapted_workout or not briefing:
-        raise RuntimeError("Claude devolvio una respuesta incompleta: falta entrenamiento o briefing.")
+        raise RuntimeError("La IA devolvio una respuesta incompleta: falta entrenamiento o briefing.")
     return {"adapted_workout": adapted_workout, "briefing": briefing}
 
 
@@ -695,6 +699,56 @@ def anthropic_messages_api(prompt: str) -> str:
     return result
 
 
+def kimi_chat_completions_api(prompt: str) -> str:
+    api_key = os.getenv("MOONSHOT_API_KEY") or os.getenv("KIMI_API_KEY")
+    if not api_key:
+        raise RuntimeError("Falta la variable de entorno MOONSHOT_API_KEY.")
+
+    payload = json.dumps(
+        {
+            "model": DEFAULT_MODEL,
+            "max_tokens": 2200,
+            "messages": [{"role": "user", "content": prompt}],
+        }
+    ).encode("utf-8")
+
+    http_request = request.Request(
+        KIMI_API_URL,
+        data=payload,
+        headers={
+            "content-type": "application/json",
+            "authorization": f"Bearer {api_key}",
+        },
+        method="POST",
+    )
+
+    try:
+        with request.urlopen(http_request, timeout=90) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="ignore")
+        raise RuntimeError(f"Kimi devolvio un error HTTP {exc.code}: {body}") from exc
+    except error.URLError as exc:
+        raise RuntimeError("No se pudo conectar con la API de Kimi.") from exc
+
+    choices = data.get("choices", [])
+    if not choices:
+        raise RuntimeError("Kimi no devolvio ninguna respuesta.")
+    message = choices[0].get("message", {})
+    result = str(message.get("content", "")).strip()
+    if not result:
+        raise RuntimeError("Kimi no devolvio contenido de texto.")
+    return result
+
+
+def generate_text_with_ai(prompt: str) -> str:
+    if AI_PROVIDER == "kimi":
+        return kimi_chat_completions_api(prompt)
+    if AI_PROVIDER == "anthropic":
+        return anthropic_messages_api(prompt)
+    raise RuntimeError(f"Proveedor de IA no soportado: {AI_PROVIDER}")
+
+
 def save_generation(
     center: dict[str, Any],
     source_workout: str,
@@ -755,7 +809,7 @@ def generate_for_center(
         raise ValueError("Centro no encontrado.")
 
     prompt = build_center_prompt(selected_center, workout_text, temporary_material_block)
-    parsed_response = parse_generation_response(anthropic_messages_api(prompt))
+    parsed_response = parse_generation_response(generate_text_with_ai(prompt))
     generation = save_generation(
         selected_center,
         workout_text,
@@ -910,13 +964,18 @@ def add_feedback(center_id: int):
 
 @app.route("/api/health")
 def health():
-    api_ready = bool(os.getenv("ANTHROPIC_API_KEY"))
+    if AI_PROVIDER == "kimi":
+        api_ready = bool(os.getenv("MOONSHOT_API_KEY") or os.getenv("KIMI_API_KEY"))
+    else:
+        api_ready = bool(os.getenv("ANTHROPIC_API_KEY"))
     return jsonify(
         {
             "ok": True,
             "db_engine": "postgres" if USE_POSTGRES else "sqlite",
             "database_path": str(DATABASE_PATH),
-            "anthropic_api_configured": api_ready,
+            "ai_api_configured": api_ready,
+            "anthropic_api_configured": bool(os.getenv("ANTHROPIC_API_KEY")),
+            "ai_provider": AI_PROVIDER,
             "model": DEFAULT_MODEL,
         }
     )

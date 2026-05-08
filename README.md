@@ -1,13 +1,13 @@
 # Adaptador MPO
 
-Web app interna para adaptar entrenamientos de CrossFit Metropolitano a varios centros usando Claude por API.
+Web app interna para adaptar entrenamientos de CrossFit Metropolitano a varios centros usando IA por API.
 
 La version limpia para produccion esta pensada para:
 
 - Flask + Gunicorn.
 - VPS Ubuntu como hosting recomendado.
 - SQLite local persistente en la VPS.
-- Anthropic Claude Sonnet como modelo.
+- Kimi o Claude como proveedor de IA.
 
 Para empezar desde cero, lee primero:
 
@@ -24,7 +24,7 @@ VPS_DEPLOY.md
 ## Archivos principales
 
 ```text
-app.py                 Backend Flask, base de datos, prompts y Claude API.
+app.py                 Backend Flask, base de datos, prompts y llamadas a IA.
 templates/index.html   Interfaz HTML.
 static/app.js          Logica de botones, guardado y generacion.
 static/styles.css      Estilos corporativos.
@@ -54,10 +54,20 @@ http://127.0.0.1:5000
 ## Variables de entorno
 
 ```text
-ANTHROPIC_API_KEY=tu_clave_de_anthropic
+AI_PROVIDER=kimi
+MOONSHOT_API_KEY=tu_clave_de_kimi
+KIMI_MODEL=kimi-k2.5
+ANTHROPIC_API_KEY=
 CLAUDE_MODEL=claude-sonnet-4-20250514
 FLASK_DEBUG=0
 DATABASE_URL=
 ```
 
 Si `DATABASE_URL` esta vacio, la app usa SQLite local. En una VPS esto es lo recomendado.
+
+Para volver a Claude, cambia:
+
+```text
+AI_PROVIDER=anthropic
+ANTHROPIC_API_KEY=tu_clave_de_anthropic
+```

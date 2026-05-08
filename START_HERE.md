@@ -77,7 +77,10 @@ backups/
 En `/opt/adaptador-mpo/.env`:
 
 ```env
-ANTHROPIC_API_KEY=tu_clave_de_anthropic
+AI_PROVIDER=kimi
+MOONSHOT_API_KEY=tu_clave_de_kimi
+KIMI_MODEL=kimi-k2.5
+ANTHROPIC_API_KEY=
 CLAUDE_MODEL=claude-sonnet-4-20250514
 FLASK_DEBUG=0
 DATABASE_URL=
@@ -121,4 +124,3 @@ git pull origin main
 ./.venv/bin/pip install -r requirements.txt
 systemctl restart adaptador-mpo
 ```
-
