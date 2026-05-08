@@ -35,7 +35,7 @@ def load_dotenv() -> None:
 load_dotenv()
 AI_PROVIDER = os.getenv("AI_PROVIDER", "anthropic").strip().lower()
 ANTHROPIC_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
-KIMI_MODEL = os.getenv("KIMI_MODEL", "kimi-k2-turbo-preview")
+KIMI_MODEL = os.getenv("KIMI_MODEL", "moonshot-v1-32k")
 KIMI_API_URL = os.getenv("KIMI_API_URL", "https://api.moonshot.ai/v1/chat/completions")
 DEFAULT_MODEL = KIMI_MODEL if AI_PROVIDER == "kimi" else ANTHROPIC_MODEL
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
@@ -704,14 +704,14 @@ def kimi_chat_completions_api(prompt: str) -> str:
     if not api_key:
         raise RuntimeError("Falta la variable de entorno MOONSHOT_API_KEY.")
 
-    payload = json.dumps(
-        {
-            "model": DEFAULT_MODEL,
-            "max_tokens": 2200,
-            "thinking": {"type": "disabled"},
-            "messages": [{"role": "user", "content": prompt}],
-        }
-    ).encode("utf-8")
+    payload_data: dict[str, Any] = {
+        "model": DEFAULT_MODEL,
+        "max_tokens": 2200,
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    if DEFAULT_MODEL == "kimi-k2.5":
+        payload_data["thinking"] = {"type": "disabled"}
+    payload = json.dumps(payload_data).encode("utf-8")
 
     http_request = request.Request(
         KIMI_API_URL,
@@ -750,7 +750,7 @@ def kimi_chat_completions_api(prompt: str) -> str:
         raise RuntimeError(
             "Kimi no devolvio contenido de texto. "
             f"Modelo: {DEFAULT_MODEL}. Motivo de finalizacion: {finish_reason}. "
-            "Prueba KIMI_MODEL=kimi-k2-turbo-preview."
+            "Prueba KIMI_MODEL=moonshot-v1-32k."
         )
     return result
 

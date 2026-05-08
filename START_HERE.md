@@ -79,7 +79,7 @@ En `/opt/adaptador-mpo/.env`:
 ```env
 AI_PROVIDER=kimi
 MOONSHOT_API_KEY=tu_clave_de_kimi
-KIMI_MODEL=kimi-k2-turbo-preview
+KIMI_MODEL=moonshot-v1-32k
 ANTHROPIC_API_KEY=
 CLAUDE_MODEL=claude-sonnet-4-20250514
 FLASK_DEBUG=0
