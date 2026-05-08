@@ -5,14 +5,20 @@ Web app interna para adaptar entrenamientos de CrossFit Metropolitano a varios c
 La version limpia para produccion esta pensada para:
 
 - Flask + Gunicorn.
-- Render como hosting.
-- Supabase Postgres como base de datos persistente.
+- VPS Ubuntu como hosting recomendado.
+- SQLite local persistente en la VPS.
 - Anthropic Claude Sonnet como modelo.
 
 Para empezar desde cero, lee primero:
 
 ```text
 START_HERE.md
+```
+
+Si vas a desplegar en una VPS, usa:
+
+```text
+VPS_DEPLOY.md
 ```
 
 ## Archivos principales
@@ -51,8 +57,7 @@ http://127.0.0.1:5000
 ANTHROPIC_API_KEY=tu_clave_de_anthropic
 CLAUDE_MODEL=claude-sonnet-4-20250514
 FLASK_DEBUG=0
-DATABASE_URL=postgresql://postgres.xxxxx:TU_PASSWORD@aws-1-eu-north-1.pooler.supabase.com:6543/postgres?sslmode=require
+DATABASE_URL=
 ```
 
-Si `DATABASE_URL` esta vacio, la app usa SQLite local. En Render debe estar configurado para usar Supabase.
-
+Si `DATABASE_URL` esta vacio, la app usa SQLite local. En una VPS esto es lo recomendado.
