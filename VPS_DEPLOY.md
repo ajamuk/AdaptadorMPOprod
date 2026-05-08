@@ -56,7 +56,7 @@ Pega esto, cambiando la clave:
 ```env
 AI_PROVIDER=kimi
 MOONSHOT_API_KEY=TU_CLAVE_DE_KIMI
-KIMI_MODEL=kimi-k2.5
+KIMI_MODEL=kimi-k2-turbo-preview
 ANTHROPIC_API_KEY=
 CLAUDE_MODEL=claude-sonnet-4-20250514
 FLASK_DEBUG=0

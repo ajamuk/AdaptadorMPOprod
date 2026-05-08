@@ -35,7 +35,7 @@ def load_dotenv() -> None:
 load_dotenv()
 AI_PROVIDER = os.getenv("AI_PROVIDER", "anthropic").strip().lower()
 ANTHROPIC_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
-KIMI_MODEL = os.getenv("KIMI_MODEL", "kimi-k2.5")
+KIMI_MODEL = os.getenv("KIMI_MODEL", "kimi-k2-turbo-preview")
 KIMI_API_URL = os.getenv("KIMI_API_URL", "https://api.moonshot.ai/v1/chat/completions")
 DEFAULT_MODEL = KIMI_MODEL if AI_PROVIDER == "kimi" else ANTHROPIC_MODEL
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
@@ -708,6 +708,7 @@ def kimi_chat_completions_api(prompt: str) -> str:
         {
             "model": DEFAULT_MODEL,
             "max_tokens": 2200,
+            "thinking": {"type": "disabled"},
             "messages": [{"role": "user", "content": prompt}],
         }
     ).encode("utf-8")
@@ -735,9 +736,22 @@ def kimi_chat_completions_api(prompt: str) -> str:
     if not choices:
         raise RuntimeError("Kimi no devolvio ninguna respuesta.")
     message = choices[0].get("message", {})
-    result = str(message.get("content", "")).strip()
+    content = message.get("content", "")
+    if isinstance(content, list):
+        result = "\n".join(
+            str(part.get("text", "")).strip()
+            for part in content
+            if isinstance(part, dict) and part.get("text")
+        ).strip()
+    else:
+        result = str(content or "").strip()
     if not result:
-        raise RuntimeError("Kimi no devolvio contenido de texto.")
+        finish_reason = choices[0].get("finish_reason", "desconocido")
+        raise RuntimeError(
+            "Kimi no devolvio contenido de texto. "
+            f"Modelo: {DEFAULT_MODEL}. Motivo de finalizacion: {finish_reason}. "
+            "Prueba KIMI_MODEL=kimi-k2-turbo-preview."
+        )
     return result
 
 

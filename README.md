@@ -56,7 +56,7 @@ http://127.0.0.1:5000
 ```text
 AI_PROVIDER=kimi
 MOONSHOT_API_KEY=tu_clave_de_kimi
-KIMI_MODEL=kimi-k2.5
+KIMI_MODEL=kimi-k2-turbo-preview
 ANTHROPIC_API_KEY=
 CLAUDE_MODEL=claude-sonnet-4-20250514
 FLASK_DEBUG=0
