@@ -54,8 +54,11 @@ http://127.0.0.1:5000
 ## Variables de entorno
 
 ```text
-AI_PROVIDER=kimi
-MOONSHOT_API_KEY=tu_clave_de_kimi
+AI_PROVIDER=openrouter
+OPENROUTER_API_KEY=tu_clave_de_openrouter
+OPENROUTER_MODEL=anthropic/claude-3.5-haiku
+APP_PUBLIC_URL=http://IP_DE_TU_VPS
+MOONSHOT_API_KEY=
 KIMI_MODEL=moonshot-v1-32k
 ANTHROPIC_API_KEY=
 CLAUDE_MODEL=claude-sonnet-4-20250514
@@ -65,7 +68,7 @@ DATABASE_URL=
 
 Si `DATABASE_URL` esta vacio, la app usa SQLite local. En una VPS esto es lo recomendado.
 
-Para volver a Claude, cambia:
+Para usar Claude directo, cambia:
 
 ```text
 AI_PROVIDER=anthropic

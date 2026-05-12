@@ -54,8 +54,11 @@ nano /opt/adaptador-mpo/.env
 Pega esto, cambiando la clave:
 
 ```env
-AI_PROVIDER=kimi
-MOONSHOT_API_KEY=TU_CLAVE_DE_KIMI
+AI_PROVIDER=openrouter
+OPENROUTER_API_KEY=TU_CLAVE_DE_OPENROUTER
+OPENROUTER_MODEL=anthropic/claude-3.5-haiku
+APP_PUBLIC_URL=http://IP_DE_TU_VPS
+MOONSHOT_API_KEY=
 KIMI_MODEL=moonshot-v1-32k
 ANTHROPIC_API_KEY=
 CLAUDE_MODEL=claude-sonnet-4-20250514

@@ -17,6 +17,7 @@ from flask import Flask, jsonify, render_template, request as flask_request
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = BASE_DIR / "instance" / "app.db"
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
+OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
 def load_dotenv() -> None:
@@ -37,7 +38,12 @@ AI_PROVIDER = os.getenv("AI_PROVIDER", "anthropic").strip().lower()
 ANTHROPIC_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
 KIMI_MODEL = os.getenv("KIMI_MODEL", "moonshot-v1-32k")
 KIMI_API_URL = os.getenv("KIMI_API_URL", "https://api.moonshot.ai/v1/chat/completions")
-DEFAULT_MODEL = KIMI_MODEL if AI_PROVIDER == "kimi" else ANTHROPIC_MODEL
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-haiku")
+DEFAULT_MODEL = {
+    "anthropic": ANTHROPIC_MODEL,
+    "kimi": KIMI_MODEL,
+    "openrouter": OPENROUTER_MODEL,
+}.get(AI_PROVIDER, ANTHROPIC_MODEL)
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 USE_POSTGRES = DATABASE_URL.startswith("postgres://") or DATABASE_URL.startswith("postgresql://")
 
@@ -755,9 +761,59 @@ def kimi_chat_completions_api(prompt: str) -> str:
     return result
 
 
+def openrouter_chat_completions_api(prompt: str) -> str:
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if not api_key:
+        raise RuntimeError("Falta la variable de entorno OPENROUTER_API_KEY.")
+
+    payload = json.dumps(
+        {
+            "model": DEFAULT_MODEL,
+            "max_tokens": 2200,
+            "messages": [{"role": "user", "content": prompt}],
+        }
+    ).encode("utf-8")
+
+    http_request = request.Request(
+        OPENROUTER_API_URL,
+        data=payload,
+        headers={
+            "content-type": "application/json",
+            "authorization": f"Bearer {api_key}",
+            "http-referer": os.getenv("APP_PUBLIC_URL", "http://localhost"),
+            "x-title": "Adaptador MPO",
+        },
+        method="POST",
+    )
+
+    try:
+        with request.urlopen(http_request, timeout=90) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="ignore")
+        raise RuntimeError(f"OpenRouter devolvio un error HTTP {exc.code}: {body}") from exc
+    except error.URLError as exc:
+        raise RuntimeError("No se pudo conectar con la API de OpenRouter.") from exc
+
+    choices = data.get("choices", [])
+    if not choices:
+        raise RuntimeError("OpenRouter no devolvio ninguna respuesta.")
+    content = choices[0].get("message", {}).get("content", "")
+    result = str(content or "").strip()
+    if not result:
+        finish_reason = choices[0].get("finish_reason", "desconocido")
+        raise RuntimeError(
+            "OpenRouter no devolvio contenido de texto. "
+            f"Modelo: {DEFAULT_MODEL}. Motivo de finalizacion: {finish_reason}."
+        )
+    return result
+
+
 def generate_text_with_ai(prompt: str) -> str:
     if AI_PROVIDER == "kimi":
         return kimi_chat_completions_api(prompt)
+    if AI_PROVIDER == "openrouter":
+        return openrouter_chat_completions_api(prompt)
     if AI_PROVIDER == "anthropic":
         return anthropic_messages_api(prompt)
     raise RuntimeError(f"Proveedor de IA no soportado: {AI_PROVIDER}")
@@ -980,6 +1036,8 @@ def add_feedback(center_id: int):
 def health():
     if AI_PROVIDER == "kimi":
         api_ready = bool(os.getenv("MOONSHOT_API_KEY") or os.getenv("KIMI_API_KEY"))
+    elif AI_PROVIDER == "openrouter":
+        api_ready = bool(os.getenv("OPENROUTER_API_KEY"))
     else:
         api_ready = bool(os.getenv("ANTHROPIC_API_KEY"))
     return jsonify(
