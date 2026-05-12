@@ -176,6 +176,7 @@ def init_db() -> None:
                     source_workout TEXT NOT NULL,
                     adapted_workout TEXT NOT NULL,
                     briefing TEXT NOT NULL DEFAULT '',
+                    lesson_plan TEXT NOT NULL DEFAULT '',
                     center_snapshot TEXT NOT NULL,
                     feedback_snapshot TEXT NOT NULL,
                     model TEXT NOT NULL,
@@ -213,6 +214,7 @@ def init_db() -> None:
                     source_workout TEXT NOT NULL,
                     adapted_workout TEXT NOT NULL,
                     briefing TEXT NOT NULL DEFAULT '',
+                    lesson_plan TEXT NOT NULL DEFAULT '',
                     center_snapshot TEXT NOT NULL,
                     feedback_snapshot TEXT NOT NULL,
                     model TEXT NOT NULL,
@@ -248,6 +250,8 @@ def migrate_center_schema() -> None:
         generation_columns = get_table_columns_from_db(db, "generations")
         if "briefing" not in generation_columns:
             execute_on_db(db, "ALTER TABLE generations ADD COLUMN briefing TEXT NOT NULL DEFAULT ''")
+        if "lesson_plan" not in generation_columns:
+            execute_on_db(db, "ALTER TABLE generations ADD COLUMN lesson_plan TEXT NOT NULL DEFAULT ''")
 
         legacy_columns = get_table_columns_from_db(db, "centers")
         if "audience" in legacy_columns:
@@ -471,7 +475,7 @@ def get_centers_with_context() -> list[dict[str, Any]]:
         )
         latest_generation = query_one(
             """
-            SELECT id, adapted_workout, briefing, created_at, model
+            SELECT id, adapted_workout, briefing, lesson_plan, created_at, model
             FROM generations
             WHERE center_id = ?
             ORDER BY id DESC
@@ -480,10 +484,11 @@ def get_centers_with_context() -> list[dict[str, Any]]:
             (center["id"],),
         )
         if latest_generation:
-            latest_generation["full_output"] = (
-                f"{latest_generation['adapted_workout'].strip()}\n\nBREAFING\n\n"
-                f"{latest_generation['briefing'].strip()}"
-            ).strip()
+            latest_generation["full_output"] = format_full_output(
+                latest_generation["adapted_workout"],
+                latest_generation["briefing"],
+                latest_generation.get("lesson_plan", ""),
+            )
         center["latest_generation"] = latest_generation
     return centers
 
@@ -503,7 +508,7 @@ Objetivo 1: entrenamiento adaptado
 - Mantener exactamente el mismo estimulo principal del entrenamiento original.
 - Si hace falta cambiar formato, volumen, carga, progresion o movimientos, hazlo solo para conservar ese mismo estimulo.
 - El calentamiento y la movilidad deben permanecer siempre iguales al original, sin cambios de texto, formato, orden, ejercicios, volumen ni tiempos.
-- No inventes explicaciones de por qué cambiaste cosas.
+- No inventes explicaciones de por que cambiaste cosas.
 - No uses markdown, tablas, ni encabezados tipo "explicacion" o "notas del modelo".
 - Respeta la estructura original siempre que sea posible.
 - Entrega el entrenamiento adaptado en 3 bloques fijos y en este orden:
@@ -529,6 +534,15 @@ Objetivo 2: briefing de clase
 - Cada bloque del briefing debe ir separado por una linea en blanco.
 - No escribas el briefing como un unico parrafo.
 
+Objetivo 3: lesson plan de clase
+- Genera un lesson plan visual y de un vistazo para el coach.
+- Debe mostrar la clase completa como una secuencia de bloques de tiempo ordenados.
+- Cada bloque debe tener: minuto de inicio, nombre del bloque, duracion estimada y una linea de descripcion maxima.
+- Incluye al final: estimulo principal del dia (1 linea), clave tecnica del dia (1 linea), y escalado prioritario si lo hay (1 linea).
+- Formato de cada bloque: [MM:00] NOMBRE DEL BLOQUE — X min — descripcion breve
+- No uses markdown. Solo texto plano con saltos de linea entre bloques.
+- Los tiempos deben ser coherentes con la duracion real tipica de una clase de 60 minutos.
+
 Datos del centro:
 Nombre: {center['name']}
 Personas por clase: {center['class_size']}
@@ -553,9 +567,10 @@ Entrenamiento original:
 
 Formato de respuesta obligatorio:
 - Devuelve exclusivamente un JSON valido, sin markdown y sin texto antes o despues.
-- Usa exactamente estas claves: "adapted_workout" y "briefing".
+- Usa exactamente estas claves: "adapted_workout", "briefing" y "lesson_plan".
 - "adapted_workout" debe ser texto plano listo para copiar y pegar y debe incluir exactamente esos 3 bloques con esos titulos.
 - "briefing" debe ser texto plano listo para leer por el coach.
+- "lesson_plan" debe ser texto plano listo para imprimir o leer de un vistazo antes de la clase.
 """.strip()
 
 
@@ -569,13 +584,14 @@ def parse_generation_response(raw_response: str) -> dict[str, str]:
     try:
         data = json.loads(cleaned)
     except json.JSONDecodeError as exc:
-        raise RuntimeError("La IA no devolvio el JSON esperado con entrenamiento y briefing.") from exc
+        raise RuntimeError("La IA no devolvio el JSON esperado con entrenamiento, briefing y lesson plan.") from exc
 
     adapted_workout = normalize_adapted_workout(str(data.get("adapted_workout", "")).strip())
     briefing = normalize_briefing(str(data.get("briefing", "")).strip())
-    if not adapted_workout or not briefing:
-        raise RuntimeError("La IA devolvio una respuesta incompleta: falta entrenamiento o briefing.")
-    return {"adapted_workout": adapted_workout, "briefing": briefing}
+    lesson_plan = compact_blank_lines(str(data.get("lesson_plan", "")).strip())
+    if not adapted_workout or not briefing or not lesson_plan:
+        raise RuntimeError("La IA devolvio una respuesta incompleta: falta entrenamiento, briefing o lesson plan.")
+    return {"adapted_workout": adapted_workout, "briefing": briefing, "lesson_plan": lesson_plan}
 
 
 def compact_blank_lines(text: str) -> str:
@@ -660,8 +676,14 @@ def normalize_briefing(raw_text: str) -> str:
     return "\n\n".join(blocks).strip()
 
 
-def format_full_output(adapted_workout: str, briefing: str) -> str:
-    return f"{adapted_workout.strip()}\n\nBREAFING\n{briefing.strip()}".strip()
+def format_full_output(adapted_workout: str, briefing: str, lesson_plan: str = "") -> str:
+    sections = [
+        adapted_workout.strip(),
+        f"BREAFING\n{briefing.strip()}",
+    ]
+    if lesson_plan.strip():
+        sections.append(f"LESSON PLAN\n{lesson_plan.strip()}")
+    return "\n\n".join(section for section in sections if section.strip()).strip()
 
 
 def anthropic_messages_api(prompt: str) -> str:
@@ -824,6 +846,7 @@ def save_generation(
     source_workout: str,
     adapted_workout: str,
     briefing: str,
+    lesson_plan: str,
     temporary_material_block: str,
     prompt: str,
 ) -> dict[str, Any]:
@@ -843,15 +866,16 @@ def save_generation(
     generation_id = execute(
         """
         INSERT INTO generations (
-            center_id, source_workout, adapted_workout, briefing, center_snapshot,
-            feedback_snapshot, model, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            center_id, source_workout, adapted_workout, briefing, lesson_plan,
+            center_snapshot, feedback_snapshot, model, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             center["id"],
             source_workout,
             adapted_workout,
             briefing,
+            lesson_plan,
             center_snapshot,
             feedback_snapshot,
             DEFAULT_MODEL,
@@ -862,7 +886,8 @@ def save_generation(
         "id": generation_id,
         "adapted_workout": adapted_workout,
         "briefing": briefing,
-        "full_output": format_full_output(adapted_workout, briefing),
+        "lesson_plan": lesson_plan,
+        "full_output": format_full_output(adapted_workout, briefing, lesson_plan),
         "created_at": created_at,
         "model": DEFAULT_MODEL,
     }
@@ -885,6 +910,7 @@ def generate_for_center(
         workout_text,
         parsed_response["adapted_workout"],
         parsed_response["briefing"],
+        parsed_response["lesson_plan"],
         temporary_material_block,
         prompt,
     )
@@ -893,9 +919,11 @@ def generate_for_center(
         "center_name": selected_center["name"],
         "adapted_workout": parsed_response["adapted_workout"],
         "briefing": parsed_response["briefing"],
+        "lesson_plan": parsed_response["lesson_plan"],
         "full_output": format_full_output(
             parsed_response["adapted_workout"],
             parsed_response["briefing"],
+            parsed_response["lesson_plan"],
         ),
         "generation": generation,
     }

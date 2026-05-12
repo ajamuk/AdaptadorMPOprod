@@ -85,7 +85,7 @@
                 <span>Bloqueo puntual de material (solo esta generacion)</span>
                 <input class="temporary-material-block-input" placeholder="Ejemplo: sin barras y sin anillas en este bloque horario">
               </label>
-              <textarea class="result-output" spellcheck="false" placeholder="Cuando generes aparecera aqui el entrenamiento adaptado y el briefing.">{% if center.latest_generation %}{{ center.latest_generation.full_output }}{% endif %}</textarea>
+              <textarea class="result-output" spellcheck="false" placeholder="Cuando generes aparecera aqui el entrenamiento adaptado, el briefing y el lesson plan.">{% if center.latest_generation %}{{ center.latest_generation.full_output }}{% endif %}</textarea>
               <p class="message center-message" aria-live="polite">
                 {% if center.latest_generation %}
                   Ultima generacion guardada: {{ center.latest_generation.created_at }}
