@@ -260,8 +260,7 @@ label span {
   letter-spacing: 0.04em;
 }
 
-.output-block,
-.briefing-block {
+.output-block {
   padding-top: 10px;
   border-top: 1px solid var(--line);
 }
@@ -272,15 +271,10 @@ label span {
   margin-bottom: 10px;
 }
 
-.result-output,
-.briefing-output {
-  min-height: 220px;
+.result-output {
+  min-height: 420px;
   font-family: "SFMono-Regular", ui-monospace, monospace;
   white-space: pre-wrap;
-}
-
-.briefing-output {
-  min-height: 190px;
 }
 
 .message {

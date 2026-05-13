@@ -35,10 +35,6 @@ function updateCenterResult(card, text, createdAt) {
   setMessage(card.querySelector(".center-message"), `Ultima generacion guardada: ${createdAt}`);
 }
 
-function updateCenterBriefing(card, text) {
-  card.querySelector(".briefing-output").value = text;
-}
-
 function selectedCenterIds() {
   return generateCenterCheckboxes
     .filter((checkbox) => checkbox.checked)
@@ -83,7 +79,6 @@ async function handleGenerate() {
     data.results.forEach((result) => {
       const card = document.querySelector(`[data-center-id="${result.center_id}"]`);
       updateCenterResult(card, result.full_output, result.generation.created_at);
-      updateCenterBriefing(card, result.briefing);
     });
     setMessage(globalMessage, "Generacion completada y guardada para los centros seleccionados.");
   } catch (error) {
@@ -142,7 +137,6 @@ async function handleSaveMemory(card, regenerate) {
 
     const result = data.results[0];
     updateCenterResult(card, result.full_output, result.generation.created_at);
-    updateCenterBriefing(card, result.briefing);
     setMessage(message, "Memoria guardada y centro regenerado con la nueva memoria.");
   } catch (error) {
     setMessage(message, error.message, true);
@@ -168,23 +162,6 @@ async function handleCopy(card) {
   }
 }
 
-async function handleCopyBriefing(card) {
-  const output = card.querySelector(".briefing-output").value;
-  const message = card.querySelector(".center-message");
-
-  if (!output.trim()) {
-    setMessage(message, "Todavia no hay briefing para copiar.", true);
-    return;
-  }
-
-  try {
-    await navigator.clipboard.writeText(output);
-    setMessage(message, "Briefing copiado al portapapeles.");
-  } catch (error) {
-    setMessage(message, "No se pudo copiar automaticamente. Puedes copiarlo manualmente.", true);
-  }
-}
-
 generateButton.addEventListener("click", handleGenerate);
 
 centerCards.forEach((card) => {
@@ -201,5 +178,4 @@ centerCards.forEach((card) => {
   card.querySelector(".save-feedback-button").addEventListener("click", () => handleSaveMemory(card, false));
   card.querySelector(".save-feedback-regenerate-button").addEventListener("click", () => handleSaveMemory(card, true));
   card.querySelector(".copy-button").addEventListener("click", () => handleCopy(card));
-  card.querySelector(".copy-briefing-button").addEventListener("click", () => handleCopyBriefing(card));
 });

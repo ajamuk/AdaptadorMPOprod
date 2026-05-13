@@ -94,16 +94,6 @@
                 {% endif %}
               </p>
             </div>
-
-            <div class="briefing-block">
-              <div class="section-heading">
-                <div>
-                  <h3>Briefing</h3>
-                </div>
-                <button class="button tertiary copy-briefing-button">Copiar briefing</button>
-              </div>
-              <textarea class="briefing-output" spellcheck="false" placeholder="Cuando generes aparecera aqui el briefing del centro.">{% if center.latest_generation %}{{ center.latest_generation.briefing }}{% endif %}</textarea>
-            </div>
           </article>
         {% endfor %}
       </section>
