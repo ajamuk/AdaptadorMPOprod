@@ -512,8 +512,9 @@ Objetivo 1: entrenamiento adaptado
 - No uses markdown, tablas, ni encabezados tipo "explicacion" o "notas del modelo".
 - Respeta la estructura original siempre que sea posible.
 - Antes de escribir la respuesta final, revisa linea por linea el entrenamiento original y detecta cualquier movimiento, material, carga, formato o volumen que choque con la memoria permanente, el material disponible, las personas por clase o el bloqueo puntual.
-- Si un ejercicio o material aparece como no disponible, prohibido, a evitar o limitado en la memoria permanente, debes sustituirlo siempre. No lo mantengas en el entrenamiento adaptado.
+- Si un ejercicio o material aparece como no disponible, prohibido, a evitar o limitado en la memoria permanente, debes sustituirlo siempre por otra opcion de estimulo equivalente. No elimines el ejercicio sin reemplazarlo.
 - Si la memoria permanente incluye escalados por defecto para un movimiento, usalos como primera opcion de sustitucion.
+- Mantener el estimulo incluye mantener una demanda equivalente de patron, volumen relativo, duracion, densidad, intensidad y fatiga. Si quitas un movimiento incompatible, pon otro que cumpla la misma funcion dentro del WOD.
 - Entrega el entrenamiento adaptado en 3 bloques fijos y en este orden:
   1. CALENTAMIENTO, MOVILIDAD Y ACTIVACION
   2. ENTRENAMIENTO
@@ -562,18 +563,23 @@ Regla critica:
 - Aplica criterio de minima intervencion: conserva estructura, orden, bloques, tiempos y volumen del original siempre que sea viable.
 - Copia calentamiento y movilidad exactamente igual que en el entrenamiento original.
 - Si hay bloqueo puntual de material en esta generacion, tratalo como restriccion obligatoria temporal con prioridad sobre el material habitual del centro.
-- La memoria permanente del centro es obligatoria: si indica que no hay material, espacio o capacidad para un movimiento, no uses ese movimiento en la adaptacion.
+- La memoria permanente del centro es obligatoria: si indica que no hay material, espacio o capacidad para un movimiento, no uses ese movimiento en la adaptacion y sustituyelo por una alternativa equivalente.
 - La memoria permanente tiene prioridad sobre el entrenamiento original. Ser fiel al original no significa conservar movimientos imposibles para el centro.
 - Si el entrenamiento original incluye un movimiento incompatible con el centro, debes cambiarlo aunque el resto del entrenamiento se mantenga igual.
-- No dejes en el resultado final movimientos, materiales o formatos marcados como "no hay", "no usar", "evitar", "prohibido", "falta", "techo bajo", "ruido", "espacio limitado" o equivalentes en la memoria permanente.
+- No dejes en el resultado final movimientos, materiales o formatos marcados como "no hay", "no usar", "evitar", "prohibido", "falta", "techo bajo", "ruido", "espacio limitado" o equivalentes en la memoria permanente. Sustituyelos por alternativas equivalentes, no los borres.
 - Cuando sustituyas algo por una restriccion de la memoria permanente, conserva el mismo estimulo fisiologico, mecanico, volumen relativo, intensidad y ritmo de trabajo.
 - El estimulo del entrenamiento debe ser equivalente al original.
 - Si sustituyes un movimiento, la nueva opcion debe perseguir la misma demanda fisiologica, mecanica y de ritmo de trabajo.
+- Esta prohibido eliminar una estacion, minuto, ronda o ejercicio incompatible sin compensarlo con una alternativa equivalente en el mismo bloque.
+- Si el original dice rope climb y el centro no tiene cuerda, sustituye por una opcion de tiron vertical/agarre/traccion equivalente segun memoria del centro, por ejemplo chest to bar, strict pull-up, rope pull desde suelo, ring row exigente o tiron con carga, ajustando volumen para mantener el estimulo.
+- Si el original dice muscle-up y el centro lo evita, sustituye por chest to bar, pull-up exigente, transiciones o tiron + empuje equivalente segun el objetivo del WOD.
+- Si el original dice GHD y el centro no tiene, sustituye por V-ups, sit-ups, hollow rocks o variante de flexion de tronco equivalente, ajustando volumen.
 - No simplifiques de mas si eso altera el objetivo.
 
 Comprobacion final obligatoria antes de responder:
 - Verifica que el entrenamiento adaptado no contiene ningun movimiento o material incompatible con la memoria permanente del centro.
-- Verifica que las sustituciones aplicadas aparecen resumidas en "ADAPTACIONES Y NOTAS".
+- Verifica que cada movimiento incompatible del original tiene una sustitucion explicita dentro del entrenamiento adaptado.
+- Verifica que las sustituciones aplicadas aparecen resumidas en "ADAPTACIONES Y NOTAS" con formato "Original -> Sustitucion".
 - Verifica que el lesson plan usa la version adaptada, no la original sin adaptar.
 
 Entrenamiento original:
