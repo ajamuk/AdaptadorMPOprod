@@ -5,3 +5,9 @@ instance/
 .env
 .DS_Store
 backups/
+.env
+.venv
+venv
+__pycache__
+*.pyc
+.DS_Store
